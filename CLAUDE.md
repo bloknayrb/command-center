@@ -75,7 +75,7 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 ```bash
 npm run dev          # Dev server (Turbopack)
 npm run build        # Production build
-npm test             # Vitest — 51 tests, 6 suites
+npm test             # Vitest — 63 tests, 8 suites
 npm run typecheck    # tsc --noEmit
 ```
 
@@ -88,13 +88,27 @@ npm run typecheck    # tsc --noEmit
 - **State**: Zustand for UI layout (`src/stores/layoutStore.ts`), React Query for server data (`src/hooks/useTasks.ts`).
 - **Config**: Zod-validated in `src/config/app.config.ts`. Defines client keywords, vault hot paths, session TTL, scanner cache TTL.
 
+### Shared Utilities
+
+These utilities exist to prevent duplication. Use them instead of inline implementations:
+
+- **`src/lib/utils/cn.ts`** — `cn()` for className merging (clsx + tailwind-merge).
+- **`src/lib/utils/tasks.ts`** — `isTaskOverdue(task)` checks due date, status, returns boolean.
+- **`src/lib/obsidian/task-filters.ts`** — `parseTaskFilters()`, `parseTaskFiltersFromParams()`, `buildCreateTaskPayload()` for consistent task filter parsing and creation payloads.
+- **`src/lib/obsidian/scanner.ts`** — `VAULT_CATEGORIES` constant with category matcher functions (`emails`, `teams`, `meetings`, `tasks`).
+- **`src/lib/obsidian/vault.ts`** — `getVaultRoot()` (throws if not set), `getVaultRootOrNull()` (returns null if not set).
+- **`src/lib/safety/safe-write.ts`** — `withRetry<T>(fn)` for OneDrive lock retry logic.
+- **`src/components/ui/ErrorBanner.tsx`** — `<ErrorBanner message={...} />` for consistent error display.
+
 ### Conventions
 
-- CSS utility function: `cn()` from `src/lib/utils/cn.ts` (clsx + tailwind-merge). Do not create local copies.
+- CSS utility function: `cn()` from `src/lib/utils/cn.ts`. Do not create local copies.
 - Accessibility: All interactive elements use `focus-visible:ring-2 focus-visible:ring-blue-500` pattern.
 - Loading states: Use `<Skeleton>` from `src/components/ui/Skeleton.tsx` and `<Card loading>` from `src/components/ui/Card.tsx`.
+- Error states: Use `<ErrorBanner>` from `src/components/ui/ErrorBanner.tsx`.
 - Icons: Lucide React (`lucide-react`), not emoji strings.
 - Dashboard components: Wrap in `<Card>` for consistent styling.
+- Client lists: Derive from `Object.keys(config.client_keywords)`, not hardcoded arrays.
 
 ### Feature Flags
 
