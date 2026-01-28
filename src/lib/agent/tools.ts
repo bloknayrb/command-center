@@ -13,6 +13,8 @@ import { readVaultFile } from "@/lib/obsidian/vault";
 
 import type { TaskStatus, TaskPriority } from "@/types/task";
 
+const PIP_ENABLED = process.env.NEXT_PUBLIC_ENABLE_PIP === "true";
+
 function getVaultRoot(): string {
   return process.env.OBSIDIAN_VAULT_PATH ?? "";
 }
@@ -20,7 +22,27 @@ function getVaultRoot(): string {
 /**
  * Tool definitions for the Anthropic SDK.
  */
+const PIP_TOOL: Tool = {
+  name: "generate_pip_report",
+  description:
+    "Generate a weekly PIP evidence report summarizing completed tasks by client. Returns markdown text suitable for pasting into a PIP check-in document.",
+  input_schema: {
+    type: "object" as const,
+    properties: {
+      start_date: {
+        type: "string",
+        description: "Start date in YYYY-MM-DD format (defaults to current week start)",
+      },
+      end_date: {
+        type: "string",
+        description: "End date in YYYY-MM-DD format (defaults to current week end)",
+      },
+    },
+  },
+};
+
 export const VAULT_TOOLS: Tool[] = [
+  ...(PIP_ENABLED ? [PIP_TOOL] : []),
   {
     name: "list_tasks",
     description:
@@ -275,6 +297,17 @@ export async function executeTool(
         const result = await updateTask(taskId, updates);
         if (!result.success) return `Error updating task: ${result.error}`;
         return `Task updated: ${taskId}`;
+      }
+
+      case "generate_pip_report": {
+        if (!PIP_ENABLED) return "PIP feature is not enabled.";
+        // Dynamic import — PIP source files may not exist in all environments
+        const { generateWeeklyReport } = await import("@/lib/pip/evidence");
+        const report = await generateWeeklyReport(
+          (input.start_date as string) ?? undefined,
+          (input.end_date as string) ?? undefined
+        );
+        return report.markdown;
       }
 
       default:

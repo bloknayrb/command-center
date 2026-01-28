@@ -1,10 +1,17 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { StatusCards } from "@/components/dashboard/StatusCards";
 import { NewItemsFeed } from "@/components/dashboard/NewItemsFeed";
 import { JeremyPriorities } from "@/components/dashboard/JeremyPriorities";
 import { TaskTable } from "@/components/dashboard/TaskTable";
 
+const PIPEvidence =
+  process.env.NEXT_PUBLIC_ENABLE_PIP === "true"
+    ? dynamic(() =>
+        import("@/components/dashboard/PIPEvidence").then((m) => m.PIPEvidence)
+      )
+    : null;
 
 export default function Dashboard() {
   return (
@@ -22,8 +29,8 @@ export default function Dashboard() {
         {/* Column 2: Priorities */}
         <JeremyPriorities />
 
-        {/* Column 3: placeholder */}
-        <div />
+        {/* Column 3: PIP evidence (when enabled) */}
+        {PIPEvidence ? <PIPEvidence /> : <div />}
       </div>
 
       {/* Full-width task table */}
