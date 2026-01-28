@@ -8,8 +8,8 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { listTasks, createTask, updateTask, filterTasks, sortTasks } from "@/lib/obsidian/tasks";
+import { parseTaskFiltersFromParams, buildCreateTaskPayload } from "@/lib/obsidian/task-filters";
 import { toUserError } from "@/lib/safety/user-errors";
-import type { TaskStatus, TaskPriority } from "@/types/task";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -22,23 +22,8 @@ export async function GET(request: NextRequest) {
     const { searchParams } = request.nextUrl;
 
     const allTasks = await listTasks();
-
-    // Apply filters from query params
-    const statusParam = searchParams.get("status");
-    const priorityParam = searchParams.get("priority");
-    const client = searchParams.get("client");
-    const overdue = searchParams.get("overdue") === "true";
-
-    const filtered = filterTasks(allTasks, {
-      status: statusParam
-        ? (statusParam.split(",") as TaskStatus[])
-        : undefined,
-      priority: priorityParam
-        ? (priorityParam.split(",") as TaskPriority[])
-        : undefined,
-      client: client ?? undefined,
-      overdue: overdue || undefined,
-    });
+    const filters = parseTaskFiltersFromParams(searchParams);
+    const filtered = filterTasks(allTasks, filters);
 
     const sorted = sortTasks(filtered);
 
@@ -71,18 +56,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const result = await createTask({
-      title,
-      status: status ?? "open",
-      priority: priority ?? "medium",
-      due,
-      client,
-      project_code,
-      source,
-      created: new Date().toISOString().split("T")[0],
-      body: taskBody ?? "",
-      tags: [],
+    const payload = buildCreateTaskPayload({
+      title, status, priority, due, client, project_code, source, body: taskBody,
     });
+    const result = await createTask(payload);
 
     if (!result.success) {
       return NextResponse.json(

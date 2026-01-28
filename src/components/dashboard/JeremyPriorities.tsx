@@ -2,38 +2,39 @@
 
 import { useTasks } from "@/hooks/useTasks";
 import { Card } from "@/components/ui/Card";
+import { ErrorBanner } from "@/components/ui/ErrorBanner";
+import { isTaskOverdue } from "@/lib/utils/tasks";
 
 /**
  * Jeremy Priorities panel — shows auto-detected and manually tagged
  * urgent items that need immediate attention.
  */
 export function JeremyPriorities() {
-  const { data: criticalData, isLoading: l1 } = useTasks({
+  const { data: priorityData, isLoading: l1, error: e1 } = useTasks({
     status: ["open", "in-progress"],
-    priority: ["critical"],
+    priority: ["critical", "high"],
   });
-  const { data: highData, isLoading: l2 } = useTasks({
-    status: ["open", "in-progress"],
-    priority: ["high"],
-  });
-  const { data: overdueData, isLoading: l3 } = useTasks({ overdue: true });
-  const isLoading = l1 || l2 || l3;
+  const { data: overdueData, isLoading: l2, error: e2 } = useTasks({ overdue: true });
+  const isLoading = l1 || l2;
+  const error = e1 || e2;
 
-  const criticalTasks = criticalData?.tasks ?? [];
-  const highTasks = highData?.tasks ?? [];
+  const priorityTasks = priorityData?.tasks ?? [];
   const overdueTasks = overdueData?.tasks ?? [];
 
-  // Deduplicate (some tasks appear in multiple queries)
+  // Deduplicate (overdue tasks may already be in priority list)
   const seen = new Set<string>();
   const allPriority = [
-    ...criticalTasks,
+    ...priorityTasks,
     ...overdueTasks,
-    ...highTasks,
   ].filter((t) => {
     if (seen.has(t.id)) return false;
     seen.add(t.id);
     return true;
   });
+
+  if (error) {
+    return <ErrorBanner message={`Failed to load priorities: ${error.message}`} />;
+  }
 
   return (
     <Card
@@ -48,10 +49,7 @@ export function JeremyPriorities() {
       ) : (
         <ul className="space-y-2">
           {allPriority.slice(0, 10).map((task) => {
-            const isOverdue =
-              task.due &&
-              task.status !== "done" &&
-              task.due < new Date().toISOString().split("T")[0];
+            const overdue = isTaskOverdue(task);
 
             return (
               <li
@@ -66,9 +64,9 @@ export function JeremyPriorities() {
                   <div className="flex gap-2 text-xs text-gray-500">
                     {task.client && <span>{task.client}</span>}
                     {task.due && (
-                      <span className={isOverdue ? "font-semibold text-red-600" : ""}>
+                      <span className={overdue ? "font-semibold text-red-600" : ""}>
                         Due: {task.due}
-                        {isOverdue && " (overdue)"}
+                        {overdue && " (overdue)"}
                       </span>
                     )}
                   </div>

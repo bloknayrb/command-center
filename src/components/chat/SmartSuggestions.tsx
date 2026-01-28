@@ -1,10 +1,20 @@
 "use client";
 
 import { useSelectionStore } from "@/stores/selectionStore";
+import {
+  Clock, Inbox, BarChart3, Mail, CheckCircle,
+  RefreshCw, Link, ClipboardList, FileText,
+} from "lucide-react";
 
 interface SmartSuggestionsProps {
   onSuggestion: (text: string) => void;
 }
+
+const baseSuggestions: { label: string; icon: React.ReactNode }[] = [
+  { label: "What are my overdue tasks?", icon: <Clock className="h-3 w-3" /> },
+  { label: "Triage my new items", icon: <Inbox className="h-3 w-3" /> },
+  { label: "Generate weekly report", icon: <BarChart3 className="h-3 w-3" /> },
+];
 
 /**
  * Smart suggestions based on selected items.
@@ -13,34 +23,27 @@ interface SmartSuggestionsProps {
 export function SmartSuggestions({ onSuggestion }: SmartSuggestionsProps) {
   const items = useSelectionStore((s) => s.items);
 
-  // Base suggestions (always available)
-  const baseSuggestions = [
-    { label: "What are my overdue tasks?", icon: "⏰" },
-    { label: "Triage my new items", icon: "📥" },
-    { label: "Generate weekly report", icon: "📊" },
-  ];
-
   // Context-aware suggestions based on selected items
-  const contextSuggestions: { label: string; icon: string }[] = [];
+  const contextSuggestions: { label: string; icon: React.ReactNode }[] = [];
 
   for (const item of items) {
     switch (item.type) {
       case "email":
         contextSuggestions.push(
-          { label: `Draft reply to "${item.title}"`, icon: "✉️" },
-          { label: `Create task from "${item.title}"`, icon: "✅" }
+          { label: `Draft reply to "${item.title}"`, icon: <Mail className="h-3 w-3" /> },
+          { label: `Create task from "${item.title}"`, icon: <CheckCircle className="h-3 w-3" /> }
         );
         break;
       case "task":
         contextSuggestions.push(
-          { label: `Update status of "${item.title}"`, icon: "🔄" },
-          { label: `What depends on "${item.title}"?`, icon: "🔗" }
+          { label: `Update status of "${item.title}"`, icon: <RefreshCw className="h-3 w-3" /> },
+          { label: `What depends on "${item.title}"?`, icon: <Link className="h-3 w-3" /> }
         );
         break;
       case "meeting":
         contextSuggestions.push(
-          { label: `Prep for "${item.title}"`, icon: "📋" },
-          { label: `Generate agenda for "${item.title}"`, icon: "📝" }
+          { label: `Prep for "${item.title}"`, icon: <ClipboardList className="h-3 w-3" /> },
+          { label: `Generate agenda for "${item.title}"`, icon: <FileText className="h-3 w-3" /> }
         );
         break;
     }

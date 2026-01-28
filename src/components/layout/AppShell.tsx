@@ -23,8 +23,8 @@ export function AppShell({ children }: AppShellProps) {
         <Header />
         <Group orientation="horizontal" className="flex-1">
           {/* Main content */}
-          <Panel defaultSize={chatOpen ? 65 : 100} minSize={40}>
-            <main className="h-full overflow-y-auto bg-white p-6">
+          <Panel defaultSize={chatOpen ? 65 : 100} minSize={30}>
+            <main className="@container h-full overflow-y-auto bg-white p-6">
               {children}
             </main>
           </Panel>
@@ -33,7 +33,7 @@ export function AppShell({ children }: AppShellProps) {
           {chatOpen && (
             <>
               <Separator className="w-1 cursor-col-resize bg-gray-200 transition-colors hover:bg-blue-400" />
-              <Panel defaultSize={35} minSize={20} maxSize={60}>
+              <Panel defaultSize={35} minSize={20}>
                 <ChatPanel />
               </Panel>
             </>

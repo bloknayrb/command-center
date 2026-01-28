@@ -2,6 +2,7 @@
 
 import { useLayoutStore } from "@/stores/layoutStore";
 import { cn } from "@/lib/utils/cn";
+import { MessageSquare } from "lucide-react";
 
 export function Header() {
   const toggleChat = useLayoutStore((s) => s.toggleChat);
@@ -29,7 +30,7 @@ export function Header() {
           )}
           title="Toggle chat panel (Ctrl+K)"
         >
-          💬 {chatOpen ? "Close Chat" : "Open Chat"}
+          <MessageSquare className="inline h-4 w-4" /> {chatOpen ? "Close Chat" : "Open Chat"}
         </button>
       </div>
     </header>

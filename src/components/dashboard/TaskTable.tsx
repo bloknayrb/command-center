@@ -2,6 +2,8 @@
 
 import { useState, useMemo } from "react";
 import { useTasks, useUpdateTask } from "@/hooks/useTasks";
+import { isTaskOverdue } from "@/lib/utils/tasks";
+import { config } from "@/config/app.config";
 import type { TaskNote, TaskStatus, TaskPriority } from "@/types/task";
 
 type SortField = "title" | "priority" | "due" | "client" | "status";
@@ -127,10 +129,9 @@ export function TaskTable() {
           className="rounded border border-gray-200 px-2 py-0.5 text-xs"
         >
           <option value="">All</option>
-          <option value="DRPA">DRPA</option>
-          <option value="VDOT">VDOT</option>
-          <option value="MDTA">MDTA</option>
-          <option value="DelDOT">DelDOT</option>
+          {Object.keys(config.client_keywords).map((c) => (
+            <option key={c} value={c}>{c}</option>
+          ))}
         </select>
         {isLoading && (
           <span className="ml-auto text-xs text-gray-400">Loading...</span>
@@ -194,10 +195,7 @@ function TaskRow({
   task: TaskNote;
   onMarkDone: (id: string) => void;
 }) {
-  const isOverdue =
-    task.due &&
-    task.status !== "done" &&
-    task.due < new Date().toISOString().split("T")[0];
+  const isOverdue = isTaskOverdue(task);
 
   return (
     <tr className="border-b border-gray-50 hover:bg-gray-50">

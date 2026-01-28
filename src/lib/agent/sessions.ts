@@ -38,7 +38,6 @@ export function addMessage(
 ): void {
   const session = getSession(sessionId);
   session.messages.push(message);
-  session.lastActive = new Date();
 }
 
 /**

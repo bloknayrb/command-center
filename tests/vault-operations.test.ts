@@ -15,6 +15,7 @@ import * as fs from "node:fs/promises";
 import * as path from "node:path";
 import * as os from "node:os";
 import { safeWriteFile } from "@/lib/safety/safe-write";
+import { vaultFileExists } from "@/lib/obsidian/vault";
 
 let testDir: string;
 
@@ -157,6 +158,49 @@ describe("safeWriteFile", () => {
 
       expect(result.success).toBe(true);
     });
+  });
+});
+
+describe("vaultFileExists", () => {
+  it("rejects paths outside vault root", async () => {
+    const outsidePath = path.join(testDir, "..", "escape.md");
+    const originalEnv = process.env.OBSIDIAN_VAULT_PATH;
+    process.env.OBSIDIAN_VAULT_PATH = testDir;
+
+    try {
+      await expect(vaultFileExists(outsidePath)).rejects.toThrow("Path outside vault");
+    } finally {
+      process.env.OBSIDIAN_VAULT_PATH = originalEnv;
+    }
+  });
+
+  it("returns true for existing file within vault", async () => {
+    const filePath = path.join(testDir, "exists.md");
+    await fs.writeFile(filePath, "content", "utf-8");
+
+    const originalEnv = process.env.OBSIDIAN_VAULT_PATH;
+    process.env.OBSIDIAN_VAULT_PATH = testDir;
+
+    try {
+      const result = await vaultFileExists(filePath);
+      expect(result).toBe(true);
+    } finally {
+      process.env.OBSIDIAN_VAULT_PATH = originalEnv;
+    }
+  });
+
+  it("returns false for non-existing file within vault", async () => {
+    const filePath = path.join(testDir, "nonexistent.md");
+
+    const originalEnv = process.env.OBSIDIAN_VAULT_PATH;
+    process.env.OBSIDIAN_VAULT_PATH = testDir;
+
+    try {
+      const result = await vaultFileExists(filePath);
+      expect(result).toBe(false);
+    } finally {
+      process.env.OBSIDIAN_VAULT_PATH = originalEnv;
+    }
   });
 });
 

@@ -57,11 +57,27 @@ export async function writeVaultFile(
 }
 
 /**
+ * Get the vault root path, returning null if not configured.
+ */
+export function getVaultRootOrNull(): string | null {
+  const vaultPath = process.env.OBSIDIAN_VAULT_PATH;
+  if (!vaultPath) return null;
+  return normalizePath(vaultPath);
+}
+
+/**
  * Check if a vault file exists.
+ * Throws if path is outside vault root (path traversal prevention).
  */
 export async function vaultFileExists(filePath: string): Promise<boolean> {
+  const normalized = normalizePath(filePath);
+  const root = getVaultRoot();
+
+  if (!isWithinRoot(normalized, root)) {
+    throw new Error(`Path outside vault: ${filePath}`);
+  }
+
   try {
-    const normalized = normalizePath(filePath);
     await fs.access(normalized);
     return true;
   } catch {

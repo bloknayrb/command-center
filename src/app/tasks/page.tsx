@@ -2,6 +2,7 @@
 
 import { TaskTable } from "@/components/dashboard/TaskTable";
 import { useCreateTask } from "@/hooks/useTasks";
+import { config } from "@/config/app.config";
 import { useState } from "react";
 
 export default function TasksPage() {
@@ -94,10 +95,9 @@ function QuickCreateForm({ onDone }: { onDone: () => void }) {
             className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus-visible:ring-2 focus-visible:ring-blue-500"
           >
             <option value="">None</option>
-            <option value="DRPA">DRPA</option>
-            <option value="VDOT">VDOT</option>
-            <option value="MDTA">MDTA</option>
-            <option value="DelDOT">DelDOT</option>
+            {Object.keys(config.client_keywords).map((c) => (
+              <option key={c} value={c}>{c}</option>
+            ))}
           </select>
         </div>
         <div>

@@ -3,6 +3,7 @@
 import { useRef, useEffect } from "react";
 import { useAgent } from "@/hooks/useAgent";
 import { useLayoutStore } from "@/stores/layoutStore";
+import { X } from "lucide-react";
 import { MessageBubble } from "./MessageBubble";
 import { MessageInput } from "./MessageInput";
 import { ContextChips } from "./ContextChips";
@@ -56,7 +57,7 @@ export function ChatPanel() {
             className="text-gray-400 hover:text-gray-600 focus-visible:ring-2 focus-visible:ring-blue-500 rounded"
             aria-label="Close chat panel"
           >
-            ✕
+            <X className="h-4 w-4" />
           </button>
         </div>
       </div>

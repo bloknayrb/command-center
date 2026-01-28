@@ -45,11 +45,3 @@ export function checkPathLength(p: string): string | null {
   }
   return null;
 }
-
-/**
- * Build a vault-relative path from a vault root and relative segments.
- * Always returns forward-slashed path within the vault.
- */
-export function vaultPath(vaultRoot: string, ...segments: string[]): string {
-  return normalizePath(path.join(vaultRoot, ...segments));
-}

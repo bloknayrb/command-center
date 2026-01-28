@@ -14,9 +14,8 @@ export interface AgentMessage {
 }
 
 export interface AgentStreamEvent {
-  type: "text" | "tool_use" | "done" | "error";
+  type: "text" | "done" | "error";
   content?: string;
-  toolName?: string;
   agent?: AgentRole;
 }
 
@@ -34,6 +33,4 @@ export interface AgentQueryOptions {
   sessionId?: string;
   /** Force a specific subagent */
   agent?: AgentRole;
-  /** Max cost in USD for this query */
-  maxBudgetUsd?: number;
 }

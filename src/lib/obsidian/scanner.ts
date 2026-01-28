@@ -16,6 +16,15 @@ import * as path from "node:path";
 import { config } from "@/config/app.config";
 import { normalizePath } from "@/lib/utils/paths";
 
+/** Category matchers for vault file classification. */
+export const VAULT_CATEGORIES = {
+  emails: (relativePath: string) => relativePath.startsWith("Emails/"),
+  teams: (relativePath: string) => relativePath.startsWith("TeamsChats/"),
+  meetings: (relativePath: string) =>
+    relativePath.startsWith("Calendar/") || relativePath.includes("Meeting Note"),
+  tasks: (relativePath: string) => relativePath.startsWith("TaskNotes/"),
+} as const;
+
 export interface VaultFile {
   /** Absolute path */
   path: string;

@@ -3,7 +3,7 @@
  */
 
 import { describe, it, expect } from "vitest";
-import { normalizePath, isWithinRoot, checkPathLength, vaultPath } from "@/lib/utils/paths";
+import { normalizePath, isWithinRoot, checkPathLength } from "@/lib/utils/paths";
 
 describe("normalizePath", () => {
   it("converts backslashes to forward slashes", () => {
@@ -69,14 +69,5 @@ describe("checkPathLength", () => {
     const result = checkPathLength(longPath);
     expect(result).not.toBeNull();
     expect(result).toContain("260");
-  });
-});
-
-describe("vaultPath", () => {
-  it("joins vault root with segments", () => {
-    const result = vaultPath("C:/vault", "TaskNotes", "task-1.md");
-    expect(result).toContain("TaskNotes");
-    expect(result).toContain("task-1.md");
-    expect(result).not.toContain("\\");
   });
 });

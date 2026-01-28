@@ -47,7 +47,7 @@ export function parseEmailNote(
   const body = parsed.body;
 
   const client = detectClient(subject + " " + body);
-  const tier = classifyTier(from, subject, body, tags);
+  const tier = classifyTier(from, subject, body, tags, client);
 
   return {
     id: path.basename(filePath, ".md"),
@@ -86,7 +86,8 @@ function classifyTier(
   from: string,
   subject: string,
   body: string,
-  tags: string[]
+  tags: string[],
+  client: string | null
 ): 1 | 2 | 3 {
   const combined = `${from} ${subject} ${body}`.toLowerCase();
 
@@ -95,11 +96,14 @@ function classifyTier(
     return 1;
   }
 
-  // Check client keywords (Tier 1)
-  for (const keywords of Object.values(config.client_keywords)) {
-    if (keywords.some((kw) => combined.includes(kw.toLowerCase()))) {
-      return 1;
-    }
+  // Check client detection (Tier 1) — uses pre-computed client from detectClient
+  if (client) {
+    return 1;
+  }
+
+  // Check tags for priority signals (Tier 1) — must be before actionSignals
+  if (tags.some((t) => t.toLowerCase().includes("urgent") || t.toLowerCase().includes("action"))) {
+    return 1;
   }
 
   // Check for action-required signals (Tier 2)
@@ -117,11 +121,6 @@ function classifyTier(
   ];
   if (actionSignals.some((s) => combined.includes(s))) {
     return 2;
-  }
-
-  // Check tags for priority signals
-  if (tags.some((t) => t.toLowerCase().includes("urgent") || t.toLowerCase().includes("action"))) {
-    return 1;
   }
 
   // Default: low priority

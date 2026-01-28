@@ -118,13 +118,12 @@ export async function safeWriteFile(
 }
 
 /**
- * Write content to a file with retry on OneDrive lock errors.
+ * Execute an async operation with retry on OneDrive lock errors.
  */
-async function writeWithRetry(filePath: string, content: string): Promise<void> {
+async function withRetry<T>(fn: () => Promise<T>): Promise<T> {
   for (let attempt = 0; attempt <= RETRY_DELAYS.length; attempt++) {
     try {
-      await fs.writeFile(filePath, content, "utf-8");
-      return;
+      return await fn();
     } catch (err) {
       if (
         isNodeError(err) &&
@@ -137,6 +136,14 @@ async function writeWithRetry(filePath: string, content: string): Promise<void> 
       throw err;
     }
   }
+  throw new Error("withRetry exhausted attempts");
+}
+
+/**
+ * Write content to a file with retry on OneDrive lock errors.
+ */
+async function writeWithRetry(filePath: string, content: string): Promise<void> {
+  await withRetry(() => fs.writeFile(filePath, content, "utf-8"));
 }
 
 /**
@@ -144,22 +151,7 @@ async function writeWithRetry(filePath: string, content: string): Promise<void> 
  * Uses copyFile (which does copy, not rename) — safe on Windows.
  */
 async function copyWithRetry(src: string, dest: string): Promise<void> {
-  for (let attempt = 0; attempt <= RETRY_DELAYS.length; attempt++) {
-    try {
-      await fs.copyFile(src, dest);
-      return;
-    } catch (err) {
-      if (
-        isNodeError(err) &&
-        RETRYABLE_CODES.has(err.code ?? "") &&
-        attempt < RETRY_DELAYS.length
-      ) {
-        await sleep(RETRY_DELAYS[attempt]);
-        continue;
-      }
-      throw err;
-    }
-  }
+  await withRetry(() => fs.copyFile(src, dest));
 }
 
 /**

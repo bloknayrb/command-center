@@ -2,6 +2,10 @@
 
 import { useTasks } from "@/hooks/useTasks";
 import { Skeleton } from "@/components/ui/Skeleton";
+import { ErrorBanner } from "@/components/ui/ErrorBanner";
+import { isTaskOverdue } from "@/lib/utils/tasks";
+
+const GRID_CLASS = "grid grid-cols-2 gap-3 @3xl:grid-cols-4";
 
 interface StatCard {
   label: string;
@@ -10,7 +14,7 @@ interface StatCard {
 }
 
 export function StatusCards() {
-  const { data, isLoading } = useTasks({
+  const { data, isLoading, error } = useTasks({
     status: ["open", "in-progress", "waiting", "done"],
   });
 
@@ -18,12 +22,7 @@ export function StatusCards() {
   const openCount = tasks.filter(
     (t) => t.status === "open" || t.status === "in-progress"
   ).length;
-  const overdueCount = tasks.filter(
-    (t) =>
-      t.due &&
-      t.status !== "done" &&
-      t.due < new Date().toISOString().split("T")[0]
-  ).length;
+  const overdueCount = tasks.filter((t) => isTaskOverdue(t)).length;
   const waitingCount = tasks.filter((t) => t.status === "waiting").length;
   const doneCount = tasks.filter((t) => t.status === "done").length;
 
@@ -50,9 +49,13 @@ export function StatusCards() {
     },
   ];
 
+  if (error) {
+    return <ErrorBanner message={`Failed to load status: ${error.message}`} />;
+  }
+
   if (isLoading) {
     return (
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+      <div className={GRID_CLASS}>
         {Array.from({ length: 4 }).map((_, i) => (
           <div key={i} className="rounded-lg border border-gray-200 bg-white p-4">
             <Skeleton className="mb-2 h-8 w-12" />
@@ -64,7 +67,7 @@ export function StatusCards() {
   }
 
   return (
-    <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+    <div className={GRID_CLASS}>
       {cards.map((card) => (
         <div
           key={card.label}

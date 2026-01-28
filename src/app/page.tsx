@@ -22,7 +22,7 @@ export default function Dashboard() {
       <StatusCards />
 
       {/* 3-column layout */}
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-6 @3xl:grid-cols-2 @5xl:grid-cols-3">
         {/* Column 1: New Items */}
         <NewItemsFeed />
 

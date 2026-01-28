@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils/cn";
 import { useLayoutStore } from "@/stores/layoutStore";
-import { LayoutDashboard, CheckSquare, FolderOpen, type LucideIcon } from "lucide-react";
+import { LayoutDashboard, CheckSquare, FolderOpen, ChevronLeft, ChevronRight, type LucideIcon } from "lucide-react";
 
 const navItems: { href: string; label: string; icon: LucideIcon }[] = [
   { href: "/", label: "Dashboard", icon: LayoutDashboard },
@@ -36,7 +36,7 @@ export function Sidebar() {
           className="rounded p-1 text-gray-500 hover:bg-gray-200 hover:text-gray-700 focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-1"
           aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
         >
-          {collapsed ? "→" : "←"}
+          {collapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
         </button>
       </div>
 

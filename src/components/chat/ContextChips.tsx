@@ -1,6 +1,8 @@
 "use client";
 
 import { useSelectionStore, type SelectedItem } from "@/stores/selectionStore";
+import { X } from "lucide-react";
+import { cn } from "@/lib/utils/cn";
 
 export function ContextChips() {
   const items = useSelectionStore((s) => s.items);
@@ -27,6 +29,13 @@ export function ContextChips() {
   );
 }
 
+const typeColors: Record<string, string> = {
+  task: "bg-green-100 text-green-800",
+  email: "bg-blue-100 text-blue-800",
+  teams: "bg-purple-100 text-purple-800",
+  meeting: "bg-orange-100 text-orange-800",
+};
+
 function Chip({
   item,
   onRemove,
@@ -34,18 +43,12 @@ function Chip({
   item: SelectedItem;
   onRemove: () => void;
 }) {
-  const typeColors: Record<string, string> = {
-    task: "bg-green-100 text-green-800",
-    email: "bg-blue-100 text-blue-800",
-    teams: "bg-purple-100 text-purple-800",
-    meeting: "bg-orange-100 text-orange-800",
-  };
-
   return (
     <span
-      className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ${
+      className={cn(
+        "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium",
         typeColors[item.type] ?? "bg-gray-100 text-gray-800"
-      }`}
+      )}
     >
       {item.title}
       <button
@@ -53,7 +56,7 @@ function Chip({
         className="hover:text-gray-900 rounded-full focus-visible:ring-2 focus-visible:ring-blue-500"
         aria-label={`Remove ${item.title}`}
       >
-        ×
+        <X className="h-3 w-3" />
       </button>
     </span>
   );

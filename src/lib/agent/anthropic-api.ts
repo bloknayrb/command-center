@@ -10,7 +10,7 @@ import { createClient, MODEL_SONNET, MAX_TOKENS } from "./config";
 import { addMessage, getConversationHistory } from "./sessions";
 import { onQueryStart, onQueryComplete, onQueryError } from "./hooks";
 import { VAULT_TOOLS, executeTool } from "./tools";
-import type { AgentQueryOptions, AgentStreamEvent, AgentMessage } from "@/types/agent";
+import type { AgentQueryOptions, AgentStreamEvent, AgentMessage, AgentRole } from "@/types/agent";
 import type { SubagentConfig } from "./subagents";
 import { formatDateTimeET } from "@/lib/utils/dates";
 
@@ -18,6 +18,39 @@ const MAX_TOOL_LOOPS = 5;
 
 interface AnthropicApiOptions extends AgentQueryOptions {
   agentConfig: SubagentConfig;
+}
+
+interface ToolCollectionResult {
+  toolResults: Anthropic.Messages.ToolResultBlockParam[];
+  events: AgentStreamEvent[];
+}
+
+/**
+ * Execute tool calls and collect results for the Anthropic API tool loop.
+ */
+async function collectToolResults(
+  toolBlocks: Anthropic.Messages.ToolUseBlock[],
+  agentRole: AgentRole
+): Promise<ToolCollectionResult> {
+  const toolResults: Anthropic.Messages.ToolResultBlockParam[] = [];
+  const events: AgentStreamEvent[] = [];
+  for (const tool of toolBlocks) {
+    events.push({
+      type: "text",
+      content: `\n_[Using ${tool.name}...]_\n`,
+      agent: agentRole,
+    });
+    const result = await executeTool(
+      tool.name,
+      tool.input as Record<string, unknown>
+    );
+    toolResults.push({
+      type: "tool_result",
+      tool_use_id: tool.id,
+      content: result,
+    });
+  }
+  return { toolResults, events };
 }
 
 /**
@@ -90,23 +123,8 @@ export async function* queryAnthropicApi(
 
         if (toolBlocks.length === 0 || response.stop_reason === "end_turn") break;
 
-        const toolResults: Anthropic.Messages.ToolResultBlockParam[] = [];
-        for (const tool of toolBlocks) {
-          yield {
-            type: "text",
-            content: `\n_[Using ${tool.name}...]_\n`,
-            agent: agentConfig.role,
-          };
-          const result = await executeTool(
-            tool.name,
-            tool.input as Record<string, unknown>
-          );
-          toolResults.push({
-            type: "tool_result",
-            tool_use_id: tool.id,
-            content: result,
-          });
-        }
+        const { toolResults, events: toolEvents } = await collectToolResults(toolBlocks, agentConfig.role);
+        for (const event of toolEvents) yield event;
 
         messages.push({ role: "assistant", content: response.content });
         messages.push({ role: "user", content: toolResults });
@@ -144,23 +162,8 @@ export async function* queryAnthropicApi(
 
         if (toolBlocks.length === 0 || finalMessage.stop_reason === "end_turn") break;
 
-        const toolResults: Anthropic.Messages.ToolResultBlockParam[] = [];
-        for (const tool of toolBlocks) {
-          yield {
-            type: "text",
-            content: `\n_[Using ${tool.name}...]_\n`,
-            agent: agentConfig.role,
-          };
-          const result = await executeTool(
-            tool.name,
-            tool.input as Record<string, unknown>
-          );
-          toolResults.push({
-            type: "tool_result",
-            tool_use_id: tool.id,
-            content: result,
-          });
-        }
+        const { toolResults, events: toolEvents } = await collectToolResults(toolBlocks, agentConfig.role);
+        for (const event of toolEvents) yield event;
 
         messages.push({ role: "assistant", content: finalMessage.content });
         messages.push({ role: "user", content: toolResults });

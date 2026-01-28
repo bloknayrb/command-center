@@ -132,7 +132,6 @@ export async function* queryClaudeCode(
       crlfDelay: Infinity,
     });
 
-    let capturedSessionId: string | undefined;
     let fullText = "";
 
     for await (const line of rl) {
@@ -148,11 +147,7 @@ export async function* queryClaudeCode(
 
       switch (event.type) {
         case "system":
-          // Capture session ID from init event
-          if (event.subtype === "init" && event.session_id) {
-            capturedSessionId = event.session_id;
-          }
-          // Skip other system events (hooks, etc.)
+          // Skip system events (init, hooks, etc.)
           break;
 
         case "assistant":

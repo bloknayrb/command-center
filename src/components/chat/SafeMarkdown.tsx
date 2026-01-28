@@ -7,6 +7,29 @@ interface SafeMarkdownProps {
   className?: string;
 }
 
+/** Safe link component — blocks javascript: and data: URLs */
+const markdownComponents: React.ComponentProps<typeof ReactMarkdown>["components"] = {
+  a: ({ href, children, ...props }) => {
+    if (
+      href &&
+      (href.startsWith("javascript:") || href.startsWith("data:"))
+    ) {
+      return <span>{children}</span>;
+    }
+    return (
+      <a
+        href={href}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="text-blue-600 underline hover:text-blue-800"
+        {...props}
+      >
+        {children}
+      </a>
+    );
+  },
+};
+
 /**
  * XSS-safe markdown renderer.
  *
@@ -17,30 +40,7 @@ interface SafeMarkdownProps {
 export function SafeMarkdown({ content, className }: SafeMarkdownProps) {
   return (
     <div className={className}>
-      <ReactMarkdown
-        components={{
-          a: ({ href, children, ...props }) => {
-            // Block javascript: and data: URLs
-            if (
-              href &&
-              (href.startsWith("javascript:") || href.startsWith("data:"))
-            ) {
-              return <span>{children}</span>;
-            }
-            return (
-              <a
-                href={href}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-blue-600 underline hover:text-blue-800"
-                {...props}
-              >
-                {children}
-              </a>
-            );
-          },
-        }}
-      >
+      <ReactMarkdown components={markdownComponents}>
         {content}
       </ReactMarkdown>
     </div>

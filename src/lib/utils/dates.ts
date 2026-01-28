@@ -8,13 +8,6 @@
 const EASTERN_TZ = "America/New_York";
 
 /**
- * Get the current date/time in Eastern Time.
- */
-export function nowET(): Date {
-  return new Date();
-}
-
-/**
  * Format a date as "YYYY-MM-DD" in Eastern Time.
  */
 export function formatDateET(date: Date = new Date()): string {

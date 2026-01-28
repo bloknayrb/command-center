@@ -8,16 +8,13 @@
 
 import type { Tool } from "@anthropic-ai/sdk/resources/messages";
 import { listTasks, filterTasks, sortTasks, createTask, updateTask } from "@/lib/obsidian/tasks";
-import { scanVault } from "@/lib/obsidian/scanner";
-import { readVaultFile } from "@/lib/obsidian/vault";
+import { scanVault, VAULT_CATEGORIES } from "@/lib/obsidian/scanner";
+import { readVaultFile, getVaultRootOrNull } from "@/lib/obsidian/vault";
+import { parseTaskFilters, buildCreateTaskPayload } from "@/lib/obsidian/task-filters";
 
-import type { TaskStatus, TaskPriority } from "@/types/task";
+
 
 const PIP_ENABLED = process.env.NEXT_PUBLIC_ENABLE_PIP === "true";
-
-function getVaultRoot(): string {
-  return process.env.OBSIDIAN_VAULT_PATH ?? "";
-}
 
 /**
  * Tool definitions for the Anthropic SDK.
@@ -176,18 +173,8 @@ export async function executeTool(
     switch (name) {
       case "list_tasks": {
         const allTasks = await listTasks();
-        const statusArr = input.status
-          ? (input.status as string).split(",").map((s) => s.trim()) as TaskStatus[]
-          : undefined;
-        const priorityArr = input.priority
-          ? (input.priority as string).split(",").map((s) => s.trim()) as TaskPriority[]
-          : undefined;
-        const filtered = filterTasks(allTasks, {
-          status: statusArr,
-          priority: priorityArr,
-          client: (input.client as string) ?? undefined,
-          overdue: (input.overdue as boolean) ?? undefined,
-        });
+        const filters = parseTaskFilters(input);
+        const filtered = filterTasks(allTasks, filters);
         const sorted = sortTasks(filtered);
 
         if (sorted.length === 0) return "No tasks match the given filters.";
@@ -206,7 +193,7 @@ export async function executeTool(
       }
 
       case "search_vault": {
-        const vaultRoot = getVaultRoot();
+        const vaultRoot = getVaultRootOrNull();
         if (!vaultRoot) return "Error: OBSIDIAN_VAULT_PATH not configured";
 
         const result = await scanVault(vaultRoot);
@@ -223,15 +210,9 @@ export async function executeTool(
         // Filter by category
         const category = input.category as string | undefined;
         if (category && category !== "all") {
-          const prefixMap: Record<string, string> = {
-            emails: "Emails/",
-            teams: "TeamsChats/",
-            meetings: "Calendar/",
-            tasks: "TaskNotes/",
-          };
-          const prefix = prefixMap[category];
-          if (prefix) {
-            files = files.filter((f) => f.relativePath.startsWith(prefix));
+          const matcher = VAULT_CATEGORIES[category as keyof typeof VAULT_CATEGORIES];
+          if (matcher) {
+            files = files.filter((f) => matcher(f.relativePath));
           }
         }
 
@@ -245,7 +226,7 @@ export async function executeTool(
       }
 
       case "read_file": {
-        const vaultRoot = getVaultRoot();
+        const vaultRoot = getVaultRootOrNull();
         if (!vaultRoot) return "Error: OBSIDIAN_VAULT_PATH not configured";
 
         const relPath = input.path as string;
@@ -260,8 +241,9 @@ export async function executeTool(
             return content.slice(0, 4000) + "\n\n[...truncated, file is very long]";
           }
           return content;
-        } catch {
-          return `File not found or unreadable: ${relPath}`;
+        } catch (err) {
+          const msg = err instanceof Error ? err.message : String(err);
+          return `File not found or unreadable: ${relPath} (${msg})`;
         }
       }
 
@@ -269,17 +251,15 @@ export async function executeTool(
         const title = input.title as string;
         if (!title) return "Error: title is required";
 
-        const result = await createTask({
+        const payload = buildCreateTaskPayload({
           title,
-          status: "open",
-          priority: (input.priority as TaskPriority) ?? "medium",
-          due: (input.due as string) ?? undefined,
-          client: (input.client as string) ?? undefined,
-          project_code: (input.project_code as string) ?? undefined,
-          created: new Date().toISOString().split("T")[0],
-          body: (input.body as string) ?? "",
-          tags: [],
+          priority: input.priority as string,
+          due: input.due as string,
+          client: input.client as string,
+          project_code: input.project_code as string,
+          body: input.body as string,
         });
+        const result = await createTask(payload);
 
         if (!result.success) return `Error creating task: ${result.error}`;
         return `Task created: ${result.taskId}`;

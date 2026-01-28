@@ -5,19 +5,16 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
-import { scanVault, type VaultFile } from "@/lib/obsidian/scanner";
+import { scanVault, VAULT_CATEGORIES, type VaultFile } from "@/lib/obsidian/scanner";
+import { getVaultRootOrNull } from "@/lib/obsidian/vault";
 import { toUserError } from "@/lib/safety/user-errors";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-function getVaultRoot(): string {
-  return process.env.OBSIDIAN_VAULT_PATH ?? "";
-}
-
 export async function GET(request: NextRequest) {
   try {
-    const vaultRoot = getVaultRoot();
+    const vaultRoot = getVaultRootOrNull();
     if (!vaultRoot) {
       return NextResponse.json(
         { error: "OBSIDIAN_VAULT_PATH not configured" },
@@ -37,21 +34,12 @@ export async function GET(request: NextRequest) {
     }
 
     // Categorize files
-    const emails = files.filter((f) => f.relativePath.startsWith("Emails/"));
-    const teams = files.filter((f) => f.relativePath.startsWith("TeamsChats/"));
-    const meetings = files.filter(
-      (f) =>
-        f.relativePath.startsWith("Calendar/") ||
-        f.relativePath.includes("Meeting Note")
-    );
-    const tasks = files.filter((f) => f.relativePath.startsWith("TaskNotes/"));
-    const other = files.filter(
-      (f) =>
-        !emails.includes(f) &&
-        !teams.includes(f) &&
-        !meetings.includes(f) &&
-        !tasks.includes(f)
-    );
+    const emails = files.filter((f) => VAULT_CATEGORIES.emails(f.relativePath));
+    const teams = files.filter((f) => VAULT_CATEGORIES.teams(f.relativePath));
+    const meetings = files.filter((f) => VAULT_CATEGORIES.meetings(f.relativePath));
+    const tasks = files.filter((f) => VAULT_CATEGORIES.tasks(f.relativePath));
+    const categorized = new Set([...emails, ...teams, ...meetings, ...tasks]);
+    const other = files.filter((f) => !categorized.has(f));
 
     return NextResponse.json({
       total: files.length,
