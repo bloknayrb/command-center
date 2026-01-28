@@ -63,3 +63,51 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 ---
 
 **These guidelines are working if:** fewer unnecessary changes in diffs, fewer rewrites due to overcomplication, and clarifying questions come before implementation rather than after mistakes.
+
+---
+
+## Project Context
+
+**Command Center** — Next.js 15 (App Router) personal operations dashboard integrating with an Obsidian vault. React 19, Tailwind CSS 4, Zustand 5, TanStack React Query 5, TypeScript 5.8.
+
+### Build & Test
+
+```bash
+npm run dev          # Dev server (Turbopack)
+npm run build        # Production build
+npm test             # Vitest — 51 tests, 6 suites
+npm run typecheck    # tsc --noEmit
+```
+
+### Key Architecture
+
+- **Dual AI backend**: Claude Code subprocess (default, Max subscription) or Anthropic API (`ANTHROPIC_API_KEY` env var). Selection logic in `src/lib/agent/config.ts`.
+- **Agent tools**: Defined in `src/lib/agent/tools.ts`. Tool definitions are Anthropic SDK `Tool[]` format. Executor is a `switch` statement routing tool names to vault operations.
+- **Streaming**: Agent responses stream via SSE (`src/app/api/agent/route.ts` → `src/hooks/useAgent.ts`). The hook uses a chunked buffer to handle split TCP frames.
+- **Vault integration**: `src/lib/obsidian/` — scanner caches files from hot paths, tasks parsed from YAML frontmatter in TaskNote markdown files.
+- **State**: Zustand for UI layout (`src/stores/layoutStore.ts`), React Query for server data (`src/hooks/useTasks.ts`).
+- **Config**: Zod-validated in `src/config/app.config.ts`. Defines client keywords, vault hot paths, session TTL, scanner cache TTL.
+
+### Conventions
+
+- CSS utility function: `cn()` from `src/lib/utils/cn.ts` (clsx + tailwind-merge). Do not create local copies.
+- Accessibility: All interactive elements use `focus-visible:ring-2 focus-visible:ring-blue-500` pattern.
+- Loading states: Use `<Skeleton>` from `src/components/ui/Skeleton.tsx` and `<Card loading>` from `src/components/ui/Card.tsx`.
+- Icons: Lucide React (`lucide-react`), not emoji strings.
+- Dashboard components: Wrap in `<Card>` for consistent styling.
+
+### Feature Flags
+
+- `NEXT_PUBLIC_ENABLE_PIP=true` (in `.env.local`) enables PIP evidence dashboard panel and `generate_pip_report` agent tool. PIP source files (`src/lib/pip/`, `src/app/api/pip/`, `src/components/dashboard/PIPEvidence.tsx`) are gitignored — they exist locally but not in the repository. The pip config schema in `app.config.ts` is retained so local PIP files compile.
+
+### Files Excluded from Repository
+
+The following exist locally but are gitignored (see `.gitignore`):
+
+- `src/components/dashboard/PIPEvidence.tsx`
+- `src/app/api/pip/`
+- `src/lib/pip/`
+- `tests/evidence-generator.test.ts`
+- `docs/IMPLEMENTATION-PLAN.md`
+
+The `tsconfig.json` `exclude` array also lists these paths to avoid CI type errors when the files are absent.
