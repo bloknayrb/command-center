@@ -4,7 +4,7 @@ import { StatusCards } from "@/components/dashboard/StatusCards";
 import { NewItemsFeed } from "@/components/dashboard/NewItemsFeed";
 import { JeremyPriorities } from "@/components/dashboard/JeremyPriorities";
 import { TaskTable } from "@/components/dashboard/TaskTable";
-import { PIPEvidence } from "@/components/dashboard/PIPEvidence";
+
 
 export default function Dashboard() {
   return (
@@ -22,8 +22,8 @@ export default function Dashboard() {
         {/* Column 2: Priorities */}
         <JeremyPriorities />
 
-        {/* Column 3: PIP Evidence */}
-        <PIPEvidence />
+        {/* Column 3: placeholder */}
+        <div />
       </div>
 
       {/* Full-width task table */}

@@ -10,7 +10,7 @@ import type { Tool } from "@anthropic-ai/sdk/resources/messages";
 import { listTasks, filterTasks, sortTasks, createTask, updateTask } from "@/lib/obsidian/tasks";
 import { scanVault } from "@/lib/obsidian/scanner";
 import { readVaultFile } from "@/lib/obsidian/vault";
-import { generateWeeklyReport } from "@/lib/pip/evidence";
+
 import type { TaskStatus, TaskPriority } from "@/types/task";
 
 function getVaultRoot(): string {
@@ -139,24 +139,6 @@ export const VAULT_TOOLS: Tool[] = [
         due: { type: "string", description: "Due date in YYYY-MM-DD format" },
       },
       required: ["taskId"],
-    },
-  },
-  {
-    name: "generate_weekly_report",
-    description:
-      "Generate a weekly status report showing completed tasks grouped by client. Useful for PIP check-ins and status updates.",
-    input_schema: {
-      type: "object" as const,
-      properties: {
-        start: {
-          type: "string",
-          description: "Start date (YYYY-MM-DD). Defaults to this Monday.",
-        },
-        end: {
-          type: "string",
-          description: "End date (YYYY-MM-DD). Defaults to this Friday.",
-        },
-      },
     },
   },
 ];
@@ -293,14 +275,6 @@ export async function executeTool(
         const result = await updateTask(taskId, updates);
         if (!result.success) return `Error updating task: ${result.error}`;
         return `Task updated: ${taskId}`;
-      }
-
-      case "generate_weekly_report": {
-        const report = await generateWeeklyReport(
-          (input.start as string) ?? undefined,
-          (input.end as string) ?? undefined
-        );
-        return report.markdown;
       }
 
       default:

@@ -70,20 +70,13 @@ const AppConfigSchema = z.object({
       DelDOT: ["DelDOT", "Delaware DOT"],
     }),
 
-  // PIP evidence generation
+  // PIP evidence generation (config only — PIP source files are gitignored)
   pip: z
     .object({
       start_date: z.string().default("2026-01-27"),
       end_date: z.string().default("2026-04-27"),
       checkin_interval_days: z.number().default(14),
-      categories: z.array(z.string()).default([
-        "Productivity & Time Management",
-        "Communication",
-        "Technical Skills",
-        "Knowledge Retention",
-        "Self-Reliance",
-        "Documentation",
-      ]),
+      categories: z.array(z.string()).default([]),
     })
     .default({}),
 

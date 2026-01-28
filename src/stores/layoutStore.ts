@@ -11,8 +11,6 @@ interface LayoutState {
   chatWidth: number;
   /** Sidebar collapsed */
   sidebarCollapsed: boolean;
-  /** PIP evidence module collapsed */
-  pipCollapsed: boolean;
   /** Calendar section collapsed */
   calendarCollapsed: boolean;
 
@@ -22,7 +20,6 @@ interface LayoutState {
   closeChat: () => void;
   setChatWidth: (width: number) => void;
   toggleSidebar: () => void;
-  togglePip: () => void;
   toggleCalendar: () => void;
 }
 
@@ -30,7 +27,6 @@ export const useLayoutStore = create<LayoutState>((set) => ({
   chatOpen: false,
   chatWidth: 35, // 35% of viewport
   sidebarCollapsed: false,
-  pipCollapsed: false,
   calendarCollapsed: false,
 
   toggleChat: () => set((s) => ({ chatOpen: !s.chatOpen })),
@@ -38,6 +34,5 @@ export const useLayoutStore = create<LayoutState>((set) => ({
   closeChat: () => set({ chatOpen: false }),
   setChatWidth: (width: number) => set({ chatWidth: width }),
   toggleSidebar: () => set((s) => ({ sidebarCollapsed: !s.sidebarCollapsed })),
-  togglePip: () => set((s) => ({ pipCollapsed: !s.pipCollapsed })),
   toggleCalendar: () => set((s) => ({ calendarCollapsed: !s.calendarCollapsed })),
 }));

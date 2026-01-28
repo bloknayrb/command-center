@@ -23,5 +23,5 @@
     }
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
-  "exclude": ["node_modules"]
+  "exclude": ["node_modules", "src/lib/pip/**", "src/app/api/pip/**", "src/components/dashboard/PIPEvidence.tsx", "tests/evidence-generator.test.ts"]
 }

@@ -28,6 +28,13 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
+# PIP (private — keep locally, exclude from public repo)
+src/components/dashboard/PIPEvidence.tsx
+src/app/api/pip/
+src/lib/pip/
+tests/evidence-generator.test.ts
+docs/IMPLEMENTATION-PLAN.md
+
 # env files
 .env
 .env.local
